@@ -1,0 +1,29 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+def earthquake_table():
+    url = "https://en.wikipedia.org/wiki/List_of_earthquakes_in_Japan"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36"
+    }
+    response=requests.get(url,headers=headers)
+    soup=BeautifulSoup(response.content,'html.parser')
+    earthquake_table=soup.find('table',{'class':'wikitable'})
+
+    earthquake=[]
+    if earthquake_table:
+        headers=[header.text.strip() for header in earthquake_table.find_all('th')[:8]]
+        headers=[header for header in headers if headers.index(header) not in [4,5]]
+        earthquake.append(headers)
+
+        rows=earthquake_table.find_all('tr')
+        for row in rows[1:]:
+            columns=[column.text.strip() for column in row.find_all('td')[:8]]
+            columns=[column for column in columns if columns.index(column) not in [4,5]]
+            earthquake.append(columns)
+    df=pd.DataFrame(earthquake[1:],columns=earthquake[0])
+    return df
+
+data=earthquake_table()
+data
